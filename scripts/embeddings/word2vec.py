@@ -1,34 +1,39 @@
-from sentence_transformers import SentenceTransformer
-from sentence_transformers import SentenceTransformer
-from sklearn.cluster import KMeans
+from gensim.models import Word2Vec
+import gensim.downloader as api
+import numpy as np
 
-def load_sentence_transformer(sentences):
+
+# model = Word2Vec(sentences=common_texts, vector_size=100, window=5, min_count=1, workers=4)
+# model.save("word2vec.model")
+
+def load_model():
+    return api.load('word2vec-google-news-300')
+
+def vectorize(list_of_docs, model):
+    """Generate vectors for list of documents using a Word Embedding
+
+    Args:
+        list_of_docs: List of documents
+        model: Gensim's Word Embedding
+
+    Returns:
+        List of document vectors
     """
-    This is a simple application for sentence embeddings: clustering
-    Sentences are mapped to sentence embeddings and then k-mean clustering is applied.
-    """
-    
+    features = []
 
-    embedder = SentenceTransformer('all-MiniLM-L6-v2')
-
-    # Corpus with example sentences
-    corpus_embeddings = embedder.encode(sentences)
-
-    return corpus_embeddings
-    # clustered_sentences = [[] for i in range(num_clusters)]
-    # for sentence_id, cluster_id in enumerate(cluster_assignment):
-    #     clustered_sentences[cluster_id].append(sentences[sentence_id])
-
-    # for i, cluster in enumerate(clustered_sentences):
-    #     print("Cluster ", i+1)
-    #     print(cluster)
-    #     print("")
-
-    return
-    # model = SentenceTransformer('all-MiniLM-L6-v2')
-    # sentence_embeddings = model.encode(sentences)
-
-    # for sentence, embedding in zip(sentences, sentence_embeddings):
-    #     print("Sentence:", sentence)
-    #     print("Embedding:", embedding)
-    #     print("")
+    for tokens in list_of_docs:
+        zero_vector = np.zeros(model.vector_size)
+        vectors = []
+        for token in tokens:
+            if token in model.wv:
+                try:
+                    vectors.append(model.wv[token])
+                except KeyError:
+                    continue
+        if vectors:
+            vectors = np.asarray(vectors)
+            avg_vec = vectors.mean(axis=0)
+            features.append(avg_vec)
+        else:
+            features.append(zero_vector)
+    return features
