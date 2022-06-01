@@ -23,7 +23,7 @@ class TopicVis:
         else: 
             self.cluster_method = cluster_method
             print("Alternative Clustering successfully selected")
-        self.model = BERTopic(embedding_model="all-mpnet-base-v2", hdbscan_model=cluster_method, nr_topics="auto")
+        self.model = BERTopic(embedding_model="sentence-t5-xl", hdbscan_model=cluster_method, nr_topics="auto")
         self.sentences = sentences
         self.opics, self.probs = self.model.fit_transform(self.sentences)
 
