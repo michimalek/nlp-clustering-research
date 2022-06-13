@@ -1,9 +1,6 @@
 from bertopic import BERTopic
 import numpy
-from flair.embeddings import TransformerDocumentEmbeddings
 from hdbscan import HDBSCAN
-from sklearn.cluster import KMeans
-from sklearn.cluster import AgglomerativeClustering
 from metrics.unsupervised import silhouette_score, get_calinski_score
 
 

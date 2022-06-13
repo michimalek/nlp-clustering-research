@@ -15,8 +15,13 @@ def process_text(text) -> list:
     nopunc =  [word.lower() for word in nopunc.split() if word not in stopwords.words('english')]
     return [stemmer.lemmatize(word) for word in nopunc]
 
-def to_set(data):
-    return list(set(data))
+def remove_duplicates(seq): 
+   # order preserving
+   checked = []
+   for e in seq:
+       if e not in checked:
+           checked.append(e)
+   return checked
 
 def prepare_sentences(data) -> list:
     docs = []

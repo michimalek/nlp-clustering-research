@@ -18,9 +18,9 @@ class Kmeans:
         silhouette = []
         
         for k in iters:
-            km = KMeans(n_clusters=k)
-            sse.append(km.fit(self.matrix).inertia_)
-            silhouette.append(silhouette_score(self.matrix, km.labels_))
+            model = self.model(n_clusters=k)
+            sse.append(model.fit(self.matrix).inertia_)
+            silhouette.append(silhouette_score(self.matrix, model.labels_))
             print('Fit {} clusters'.format(k))
             
         f, ax = plt.subplots(1, 1)
