@@ -27,7 +27,7 @@ def transformer_kmeans_pipeline_find_k(clean_sentences, max_k):
     embeddings = model.encode(clean_sentences)
     umap = UMAP()
     umap_embeddings = umap.fit_transform(embeddings)
-    KFinder(KMeans(), umap_embeddings).find_k(50)
+    KFinder(KMeans(), umap_embeddings).find_k(max_k)
 
 def transformer_kmeans_pipeline(clean_sentences, n_clusters):
     model = SentenceTransformer('sentence-t5-xl')
@@ -112,11 +112,11 @@ def bert_affinity_pipeline(clean_sentences):
     TopicVis(clean_sentences, AffinityPropagation()).show_bars()
 
 if __name__ == '__main__':
-    data = remove_duplicates(pd.read_csv("data/Recommendations.csv")["Recommendation"])
+    data = remove_duplicates(pd.read_excel("data/Recommendations_label.xlsx")["Recommendation"])
     clean = prepare_sentences(data)
-    transformer_kmeans_pipeline_find_k(clean, 50)
-    # labels = transformer_affinity_pipeline(clean)
-    # pd = pd.DataFrame({"Recommendation": data, "Label": labels})
+    labels = transformer_kmeans_pipeline_find_k(clean, 20)
+    # df = pd.DataFrame({"Recommendation": data, "Label": labels})
+    # df.to_excel("results_new/kmeans_7_result.xlsx")
     # print(pd)
     # print(np.unique(labels))
 

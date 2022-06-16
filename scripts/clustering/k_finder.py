@@ -1,4 +1,4 @@
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, calinski_harabasz_score
 from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -16,11 +16,12 @@ class KFinder:
         iters = range(2, max_k+1)
         sse = []
         silhouette = []
+        calinski = []
         
         for k in iters:
             temp_model = None
             if isinstance(self.model, KMeans):
-                temp_model = KMeans(k).fit(self.matrix)
+                temp_model = KMeans(k, random_state=420).fit(self.matrix)
                 sse.append(temp_model.inertia_)
 
             if isinstance(self.model, AgglomerativeClustering):
@@ -34,29 +35,30 @@ class KFinder:
                 return
                 
             silhouette.append(silhouette_score(self.matrix, temp_model.labels_))
+            calinski.append(calinski_harabasz_score(self.matrix, temp_model.labels_))
+
             print('Fit {} clusters'.format(k))
             
         if isinstance(self.model, KMeans):
-            # f, ax = plt.subplots(1, 1)
-            # ax.plot(iters, sse, marker='o')
-            # ax.set_xlabel('Cluster Centers')
-            # ax.set_xticks(iters)
-            # ax.set_xticklabels(iters)
-            # ax.set_ylabel('SSE')
-            # ax.set_title('SSE by Cluster Center Plot')
-            # plt.tight_layout()
-            # plt.show()
             visualizer = KElbowVisualizer(self.model, k=(1,max_k))
             visualizer.fit(self.matrix)   
             visualizer.show()  
 
-        f, ax = plt.subplots(1, 1)
-        ax.plot(iters, silhouette, marker='o')
-        ax.set_xlabel('Cluster Centers')
-        ax.set_xticks(iters)
-        ax.set_xticklabels(iters)
-        ax.set_ylabel('Score')
-        ax.set_title('Silhoute Score by Cluster')
+        f, ax = plt.subplots(2)
+        ax[0].plot(iters, silhouette, marker='o')
+        ax[0].set_xlabel('Cluster Centers')
+        ax[0].set_xticks(iters)
+        ax[0].set_xticklabels(iters)
+        ax[0].set_ylabel('Score')
+        ax[0].set_title('Silhoute Score by Cluster')
+
+        ax[1].plot(iters, calinski, marker='o')
+        ax[1].set_xlabel('Cluster Centers')
+        ax[1].set_xticks(iters)
+        ax[1].set_xticklabels(iters)
+        ax[1].set_ylabel('Score')
+        ax[1].set_title('Calinski Harabasz Score by Cluster')
+
         plt.tight_layout()
         plt.show()
 
