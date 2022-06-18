@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from embeddings.tfidf import get_df, get_matrix
-from embeddings.preprocessing import remove_duplicates, prepare_sentences
+from embeddings.preprocessing import remove_duplicates, prepare_sentences, return_feature_sentence_length
 from clustering.topic_visualization import TopicVis
 from clustering.kmeans import Kmeans
 from clustering.k_finder import KFinder
@@ -23,77 +23,80 @@ def tfidf_kmeans_pipeline(clean_sentences):
     return get_matrix(clean_sentences)
 
 def transformer_kmeans_pipeline_find_k(clean_sentences, max_k):
+    # sentence_length = return_feature_sentence_length(clean_sentences)
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
+    # embedding = np.c_[embedding, sentence_length]
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
-    KFinder(KMeans(), umap_embeddings).find_k(max_k)
+    umap_embedding = umap.fit_transform(embedding)
+    KFinder(KMeans(), umap_embedding).find_k(max_k)
 
 def transformer_kmeans_pipeline(clean_sentences, n_clusters):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
-    kmeans = KMeans(n_clusters= n_clusters).fit(umap_embeddings)
-    print(silhouette_score(umap_embeddings, kmeans.labels_))
+    umap_embedding = umap.fit_transform(embedding)
+    kmeans = KMeans(n_clusters= n_clusters).fit(umap_embedding)
+    print(silhouette_score(umap_embedding, kmeans.labels_))
     return kmeans.labels_
 
 def transformer_agglomerative_pipeline_find_k(clean_sentences, max_k):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
-    KFinder(AgglomerativeClustering(), umap_embeddings).find_k(max_k)
+    umap_embedding = umap.fit_transform(embedding)
+    KFinder(AgglomerativeClustering(), umap_embedding).find_k(max_k)
 
 def transformer_agglomerative_pipeline(clean_sentences, n_clusters):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
-    agglomerative = AgglomerativeClustering(n_clusters= n_clusters).fit(umap_embeddings)
-    print(silhouette_score(umap_embeddings, agglomerative.labels_))
+    umap_embedding = umap.fit_transform(embedding)
+    agglomerative = AgglomerativeClustering(n_clusters= n_clusters).fit(umap_embedding)
+    print(silhouette_score(umap_embedding, agglomerative.labels_))
     return agglomerative.labels_
 
 def transformer_spectral_pipeline_find_k(clean_sentences, max_k):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
-    KFinder(SpectralClustering(), umap_embeddings).find_k(max_k)
+    umap_embedding = umap.fit_transform(embedding)
+    KFinder(SpectralClustering(), umap_embedding).find_k(max_k)
 
 def transformer_spectral_pipeline(clean_sentences, n_clusters):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
-    spectral = SpectralClustering(n_clusters= n_clusters).fit(umap_embeddings)
-    print(silhouette_score(umap_embeddings, spectral.labels_))
+    umap_embedding = umap.fit_transform(embedding)
+    spectral = SpectralClustering(n_clusters= n_clusters).fit(umap_embedding)
+    print(silhouette_score(umap_embedding, spectral.labels_))
     return spectral.labels_
 
 def transformer_hdbscan_pipeline(clean_sentences):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
-    hdb = HDBSCAN().fit(umap_embeddings)
+    umap_embedding = umap.fit_transform(embedding)
+    hdb = HDBSCAN().fit(umap_embedding)
     return hdb.labels_
 
 def transformer_meanshift_pipeline(clean_sentences):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
+
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
+    umap_embedding = umap.fit_transform(embedding)
     mshift = MeanShift()
-    mshift.fit(umap_embeddings)
+    mshift.fit(umap_embedding)
     return mshift.labels_
 
 def transformer_affinity_pipeline(clean_sentences):
     model = SentenceTransformer('sentence-t5-xl')
-    embeddings = model.encode(clean_sentences)
+    embedding = model.encode(clean_sentences)
     umap = UMAP()
-    umap_embeddings = umap.fit_transform(embeddings)
+    umap_embedding = umap.fit_transform(embedding)
     affinity = AffinityPropagation()
-    affinity.fit(umap_embeddings)
+    affinity.fit(umap_embedding)
     return affinity.labels_
 
 def bert_hdbscan_pipeline(clean_sentences):
@@ -114,9 +117,11 @@ def bert_affinity_pipeline(clean_sentences):
 if __name__ == '__main__':
     data = remove_duplicates(pd.read_excel("data/Recommendations_label.xlsx")["Recommendation"])
     clean = prepare_sentences(data)
-    labels = transformer_kmeans_pipeline_find_k(clean, 20)
-    # df = pd.DataFrame({"Recommendation": data, "Label": labels})
-    # df.to_excel("results_new/kmeans_7_result.xlsx")
+    k = 9
+    labels = transformer_affinity_pipeline(clean)
+    df = pd.DataFrame({"Recommendation": data, "Label": labels})
+    df.to_excel(f"results_new/affinity.xlsx")
+    # df.to_excel(f"results_new/spectral_{k}.xlsx")
     # print(pd)
     # print(np.unique(labels))
 

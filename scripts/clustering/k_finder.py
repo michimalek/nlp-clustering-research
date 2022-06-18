@@ -1,9 +1,11 @@
-from sklearn.metrics import silhouette_score, calinski_harabasz_score
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
 import seaborn as sns
 import matplotlib.pyplot as plt
 from yellowbrick.cluster import silhouette_visualizer, KElbowVisualizer
 
+# Script to pass sklearn model (K-Means, Agglomerative Clustering, Spectral Clustering)
+# and embedding to generate statistics for finding optimal number of clusters for given algorithm
 class KFinder:
     model = None
     matrix = None
@@ -13,10 +15,13 @@ class KFinder:
         self.matrix = matrix
 
     def find_k(self, max_k):
+        """Loops through iters range of 2 and max_k+1 and returns statstics of silhouete, calinski and davies scores
+        for each iteration"""
         iters = range(2, max_k+1)
         sse = []
         silhouette = []
         calinski = []
+        davies = []
         
         for k in iters:
             temp_model = None
@@ -36,6 +41,7 @@ class KFinder:
                 
             silhouette.append(silhouette_score(self.matrix, temp_model.labels_))
             calinski.append(calinski_harabasz_score(self.matrix, temp_model.labels_))
+            davies.append(davies_bouldin_score(self.matrix, temp_model.labels_))
 
             print('Fit {} clusters'.format(k))
             
@@ -44,7 +50,7 @@ class KFinder:
             visualizer.fit(self.matrix)   
             visualizer.show()  
 
-        f, ax = plt.subplots(2)
+        f, ax = plt.subplots(3)
         ax[0].plot(iters, silhouette, marker='o')
         ax[0].set_xlabel('Cluster Centers')
         ax[0].set_xticks(iters)
@@ -59,8 +65,12 @@ class KFinder:
         ax[1].set_ylabel('Score')
         ax[1].set_title('Calinski Harabasz Score by Cluster')
 
+        ax[2].plot(iters, davies, marker='o')
+        ax[2].set_xlabel('Cluster Centers')
+        ax[2].set_xticks(iters)
+        ax[2].set_xticklabels(iters)
+        ax[2].set_ylabel('Score')
+        ax[2].set_title('Davies Bouldin Score by Cluster')
+
         plt.tight_layout()
         plt.show()
-
-    def find_silhouette(self, k):
-        silhouette_visualizer(KMeans(k), self.matrix, colors='yellowbrick')

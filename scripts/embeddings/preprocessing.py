@@ -34,3 +34,8 @@ def prepare_words(data) -> list:
     for rec in data:
         words.append(process_text(rec))
     return words
+
+def return_feature_sentence_length(text_data):
+    return [len(text) for text in text_data]
+
+
