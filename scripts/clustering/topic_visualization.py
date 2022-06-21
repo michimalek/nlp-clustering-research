@@ -1,6 +1,7 @@
 from bertopic import BERTopic
 import numpy
 from hdbscan import HDBSCAN
+from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
 from metrics.unsupervised import silhouette_score, get_calinski_score
 
 
@@ -12,15 +13,30 @@ class TopicVis:
     cluster_method = None
     
 
-    def __init__(self, sentences, cluster_method=None):
-        # model_name = TransformerDocumentEmbeddings('distilbert-base-uncased-finetuned-sst-2-english')
+    def __init__(self, sentences, cluster_method=None, k=None):
         self.cluster_method = cluster_method
         if cluster_method is None:
             cluster_method = HDBSCAN(min_cluster_size=15, metric='euclidean', cluster_selection_method='eom', prediction_data=True)
+        
+        if isinstance(k, int):
+            if isinstance(self.model, KMeans):
+                self.cluster_method = KMeans(k, random_state=420).fit(self.matrix)
+
+            if isinstance(self.model, AgglomerativeClustering):
+                self.cluster_method = AgglomerativeClustering(k).fit(self.matrix)
+
+            if isinstance(self.model, SpectralClustering):
+                self.cluster_method = SpectralClustering(k).fit(self.matrix)
+            
+            self.model = BERTopic(embedding_model="sentence-t5-xl", hdbscan_model=cluster_method, nr_topics=k)
+
+        
         else: 
             self.cluster_method = cluster_method
+            self.model = BERTopic(embedding_model="sentence-t5-xl", hdbscan_model=cluster_method, nr_topics="auto")
+
             print("Alternative Clustering successfully selected")
-        self.model = BERTopic(embedding_model="sentence-t5-xl", hdbscan_model=cluster_method, nr_topics="auto")
+
         self.sentences = sentences
         self.opics, self.probs = self.model.fit_transform(self.sentences)
 
