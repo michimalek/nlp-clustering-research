@@ -6,7 +6,7 @@ from embeddings.sbert import create_embedding
 from embeddings.preprocessing import remove_duplicates, prepare_sentences, return_feature_sentence_length
 from clustering.topic_visualization import TopicVis
 from clustering.k_finder import KFinder
-from clustering.validation import get_validation
+from clustering.validation import get_validation_df, get_validation_txt
 from sklearn.cluster import KMeans, AgglomerativeClustering, MeanShift, AffinityPropagation, SpectralClustering
 from sklearn.metrics import silhouette_score
 from umap import UMAP
@@ -25,8 +25,7 @@ def transformer_kmeans_pipeline(clean_sentences, n_clusters):
     embedding = create_embedding(clean_sentences)
     umap = UMAP()
     umap_embedding = umap.fit_transform(embedding)
-    kmeans = KMeans(n_clusters= n_clusters).fit(umap_embedding)
-    print(silhouette_score(umap_embedding, kmeans.labels_))
+    kmeans = KMeans(n_clusters= n_clusters, random_state=25).fit(umap_embedding)
     return kmeans.labels_
 
 def transformer_agglomerative_pipeline_find_k(clean_sentences, max_k):
@@ -52,13 +51,13 @@ def transformer_spectral_pipeline(clean_sentences, n_clusters):
     embedding = create_embedding(clean_sentences)
     umap = UMAP()
     umap_embedding = umap.fit_transform(embedding)
-    spectral = SpectralClustering(n_clusters= n_clusters).fit(umap_embedding)
+    spectral = SpectralClustering(n_clusters= n_clusters, random_state=25).fit(umap_embedding)
     print(silhouette_score(umap_embedding, spectral.labels_))
     return spectral.labels_
 
 def transformer_hdbscan_pipeline(clean_sentences):
     embedding = create_embedding(clean_sentences)
-    umap = UMAP()
+    umap = UMAP(random_state=25)
     umap_embedding = umap.fit_transform(embedding)
     hdb = HDBSCAN().fit(umap_embedding)
     return hdb.labels_
@@ -75,7 +74,7 @@ def transformer_affinity_pipeline(clean_sentences):
     embedding = create_embedding(clean_sentences)
     umap = UMAP()
     umap_embedding = umap.fit_transform(embedding)
-    affinity = AffinityPropagation()
+    affinity = AffinityPropagation(random_state=25)
     affinity.fit(umap_embedding)
     return affinity.labels_
 
@@ -83,16 +82,16 @@ def bert_hdbscan_pipeline(clean_sentences):
     TopicVis(clean_sentences).show_bars()
 
 def bert_kmeans_pipeline(clean_sentences, n_clusters):
-    TopicVis(clean_sentences, KMeans(n_clusters=n_clusters)).show_bars()
+    TopicVis(clean_sentences, KMeans(), n_clusters).show_bars()
 
 def bert_agglomerative_pipeline(clean_sentences, n_clusters):
-    TopicVis(clean_sentences, AgglomerativeClustering(n_clusters=n_clusters)).show_bars()
+    TopicVis(clean_sentences, AgglomerativeClustering(), n_clusters).show_bars()
 
 def bert_meanshift_pipeline(clean_sentences):
     TopicVis(clean_sentences, MeanShift()).show_bars()
 
 def bert_affinity_pipeline(clean_sentences):
-    TopicVis(clean_sentences, AffinityPropagation()).show_bars()
+    TopicVis(clean_sentences, AffinityPropagation(), 11).show_bars()
 
 def bert_kmeans_pipeline(clean_sentences, n_clusters):
     TopicVis(clean_sentences, KMeans(), n_clusters).show_bars()
@@ -104,31 +103,49 @@ def bert_agglomerative_pipeline(clean_sentences, n_clusters):
     TopicVis(clean_sentences, AgglomerativeClustering(), n_clusters).show_bars()
 
 # Returns .txt with 
-def create_validation(true_labels):
+def create_external_validation_txt(true, predicted):
     open('metrices.txt', 'w').close()
 
     for subdir, dirs, files in os.walk("results_new"):
         for file in files:
-            filepath = subdir + os.sep + file
-
-            pred = pd.read_excel(filepath)["Label"]
-            
+            filepath = subdir + os.sep + file            
             with open('metrices.txt', 'a') as f:
                 f.write('------------------------------\n')
                 f.write(f'Name: {file}\n\n')
-                f.writelines(get_validation(true_labels, pred))
+                f.writelines(get_validation_txt(true, predicted))
                 f.write('\n')
 
-if __name__ == '__main__':
-    data = remove_duplicates(pd.read_excel("data/Recommendations_label.xlsx")["Recommendation"])
-    clean = prepare_sentences(data)
-    k = 9
-    labels = bert_kmeans_pipeline(clean, 11)
-    # df = pd.DataFrame({"Recommendation": data, "Label": labels})
-    # df.to_excel(f"results_new/affinity.xlsx")
-    # df.to_excel(f"results_new/spectral_{k}.xlsx")
-    # print(pd)
-    # print(np.unique(labels))
+def create_external_validation_df(true, predicted):
+    df = pd.DataFrame()
+    i = []
+    for subdir, dirs, files in os.walk("results_new"):
+        for file in files:
+            filepath = subdir + os.sep + file
+            df = pd.concat([df, get_validation_df(true,predicted)],ignore_index=True)
+            i.append(file.split(".")[0])
+            print(i)
 
+    df.columns = ["Rand Index","Homogeneity Score","Completness Score","V-Measure","Purity"]
+    df["algo_name"] = i
+    df.set_index("algo_name", inplace=True)
+    return df
+    # df.columns = ["Rand Index","Homogeneity Score","Completness Score","V-Measure","Purity"]
+    # return df.reindex(i)
+
+def create_excel(path, sentences, labels):
+    df = pd.DataFrame({"Recommendation": sentences, "Label": labels})
+    df.to_excel(path + ".xlsx")
+
+    
+
+if __name__ == '__main__':
+    data = pd.read_excel("data/Recommendations_label.xlsx")["Recommendation"]
+    clean = prepare_sentences(data)
+    labels = transformer_spectral_pipeline(clean, 11)
+    create_excel("results_new/spectral_11", data, labels)
+
+
+    # true = pd.read_excel("data/Recommendations_label.xlsx")["Label"]
+    # get_validation_df(true).to_excel("results_new/spectral_7.xlsx")
     
 
