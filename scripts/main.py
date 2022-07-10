@@ -78,35 +78,10 @@ def transformer_affinity_pipeline(clean_sentences):
     affinity.fit(umap_embedding)
     return affinity.labels_
 
-def bert_hdbscan_pipeline(clean_sentences):
-    TopicVis(clean_sentences).show_bars()
-
-def bert_kmeans_pipeline(clean_sentences, n_clusters):
-    TopicVis(clean_sentences, KMeans(), n_clusters).show_bars()
-
-def bert_agglomerative_pipeline(clean_sentences, n_clusters):
-    TopicVis(clean_sentences, AgglomerativeClustering(), n_clusters).show_bars()
-
-def bert_meanshift_pipeline(clean_sentences):
-    TopicVis(clean_sentences, MeanShift()).show_bars()
-
-def bert_affinity_pipeline(clean_sentences):
-    TopicVis(clean_sentences, AffinityPropagation(), 11).show_bars()
-
-def bert_kmeans_pipeline(clean_sentences, n_clusters):
-    TopicVis(clean_sentences, KMeans(), n_clusters).show_bars()
-
-def bert_spectral_pipeline(clean_sentences, n_clusters):
-    TopicVis(clean_sentences, SpectralClustering(), n_clusters).show_bars()
-
-def bert_agglomerative_pipeline(clean_sentences, n_clusters):
-    TopicVis(clean_sentences, AgglomerativeClustering(), n_clusters).show_bars()
-
-# Returns .txt with 
-def create_external_validation_txt(true, predicted):
+def create_external_validation_txt(true, predicted, dir="results"):
     open('metrices.txt', 'w').close()
 
-    for subdir, dirs, files in os.walk("results_new"):
+    for subdir, dirs, files in os.walk(dir):
         for file in files:
             filepath = subdir + os.sep + file            
             with open('metrices.txt', 'a') as f:
@@ -115,37 +90,36 @@ def create_external_validation_txt(true, predicted):
                 f.writelines(get_validation_txt(true, predicted))
                 f.write('\n')
 
-def create_external_validation_df(true, predicted):
+def create_external_validation_df(true, predicted, dir = "results"):
     df = pd.DataFrame()
     i = []
-    for subdir, dirs, files in os.walk("results_new"):
+    for subdir, dirs, files in os.walk(dir):
         for file in files:
             filepath = subdir + os.sep + file
             df = pd.concat([df, get_validation_df(true,predicted)],ignore_index=True)
             i.append(file.split(".")[0])
             print(i)
-
     df.columns = ["Rand Index","Homogeneity Score","Completness Score","V-Measure","Purity"]
     df["algo_name"] = i
     df.set_index("algo_name", inplace=True)
     return df
-    # df.columns = ["Rand Index","Homogeneity Score","Completness Score","V-Measure","Purity"]
-    # return df.reindex(i)
 
 def create_excel(path, sentences, labels):
     df = pd.DataFrame({"Recommendation": sentences, "Label": labels})
     df.to_excel(path + ".xlsx")
-
     
 
 if __name__ == '__main__':
+    # Read data
     data = pd.read_excel("data/Recommendations_label.xlsx")["Recommendation"]
+
+    # Clean data
     clean = prepare_sentences(data)
+
+    # Produce labels with given clustering algorithm
     labels = transformer_spectral_pipeline(clean, 7)
-    create_excel("results_new/spectral_7", data, labels)
 
-
-    # true = pd.read_excel("data/Recommendations_label.xlsx")["Label"]
-    # get_validation_df(true).to_excel("results_new/spectral_7.xlsx")
+    # Save Excel with original sentences and predicted corresponding labels to given path
+    create_excel("results/spectral_7", data, labels)
     
 
