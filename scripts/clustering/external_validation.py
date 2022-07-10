@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import rand_score, homogeneity_score, completeness_score, v_measure_score, accuracy_score, adjusted_rand_score
+from sklearn.metrics import rand_score, homogeneity_score, completeness_score, v_measure_score, adjusted_rand_score
 from sklearn.metrics.cluster import contingency_matrix
 from sklearn import metrics
+import os
 
 def purity_score(y_true, y_pred):
     # compute contingency matrix (also called confusion matrix)
@@ -28,3 +29,29 @@ def get_validation_df(true_labels, pred_labels):
         purity_score(true_labels, pred_labels)
     ]])
         
+def create_external_validation_txt(true, dir="results"):
+    open('metrices.txt', 'w').close()
+
+    for subdir, dirs, files in os.walk(dir):
+        for file in files:
+            filepath = subdir + os.sep + file        
+            pred = pd.read_excel(filepath)["Label"]    
+            with open('external_validation.txt', 'a') as f:
+                f.write('------------------------------\n')
+                f.write(f'Name: {file}\n\n')
+                f.writelines(get_validation_txt(true, pred))
+                f.write('\n')
+
+def create_external_validation_df(true, dir = "results"):
+    df = pd.DataFrame()
+    i = []
+    for subdir, dirs, files in os.walk(dir):
+        for file in files:
+            filepath = subdir + os.sep + file
+            pred = pd.read_excel(filepath)["Label"]    
+            df = pd.concat([df, get_validation_df(true, pred)],ignore_index=True)
+            i.append(file.split(".")[0])
+    df.columns = ["Rand Index","Homogeneity Score","Completness Score","V-Measure","Purity"]
+    df["algo_name"] = i
+    df.set_index("algo_name", inplace=True)
+    return df

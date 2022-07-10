@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 import os
-from embeddings.tfidf import get_df, get_matrix
+from embeddings.tfidf import get_df, create_matrix
 from embeddings.sbert import create_embedding
 from embeddings.preprocessing import remove_duplicates, prepare_sentences, return_feature_sentence_length
 from clustering.topic_visualization import TopicVis
 from clustering.k_finder import KFinder
-from clustering.validation import get_validation_df, get_validation_txt
+from clustering.external_validation import get_validation_df, get_validation_txt
 from sklearn.cluster import KMeans, AgglomerativeClustering, MeanShift, AffinityPropagation, SpectralClustering
 from sklearn.metrics import silhouette_score
 from umap import UMAP
@@ -83,11 +83,12 @@ def create_external_validation_txt(true, predicted, dir="results"):
 
     for subdir, dirs, files in os.walk(dir):
         for file in files:
-            filepath = subdir + os.sep + file            
-            with open('metrices.txt', 'a') as f:
+            filepath = subdir + os.sep + file        
+            pred = pd.read_excel(filepath)["Label"]    
+            with open('external_validation.txt', 'a') as f:
                 f.write('------------------------------\n')
                 f.write(f'Name: {file}\n\n')
-                f.writelines(get_validation_txt(true, predicted))
+                f.writelines(get_validation_txt(true, pred))
                 f.write('\n')
 
 def create_external_validation_df(true, predicted, dir = "results"):
@@ -107,7 +108,6 @@ def create_external_validation_df(true, predicted, dir = "results"):
 def create_excel(path, sentences, labels):
     df = pd.DataFrame({"Recommendation": sentences, "Label": labels})
     df.to_excel(path + ".xlsx")
-    
 
 if __name__ == '__main__':
     # Read data
@@ -120,6 +120,6 @@ if __name__ == '__main__':
     labels = transformer_spectral_pipeline(clean, 7)
 
     # Save Excel with original sentences and predicted corresponding labels to given path
-    create_excel("results/spectral_7", data, labels)
+    # create_excel("results/spectral_7", data, labels)
     
 
