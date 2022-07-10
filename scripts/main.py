@@ -51,7 +51,7 @@ def transformer_spectral_pipeline(clean_sentences, n_clusters):
     embedding = create_embedding(clean_sentences)
     umap = UMAP()
     umap_embedding = umap.fit_transform(embedding)
-    spectral = SpectralClustering(n_clusters= n_clusters, random_state=25).fit(umap_embedding)
+    spectral = SpectralClustering(n_clusters= n_clusters).fit(umap_embedding)
     print(silhouette_score(umap_embedding, spectral.labels_))
     return spectral.labels_
 
@@ -141,8 +141,8 @@ def create_excel(path, sentences, labels):
 if __name__ == '__main__':
     data = pd.read_excel("data/Recommendations_label.xlsx")["Recommendation"]
     clean = prepare_sentences(data)
-    labels = transformer_spectral_pipeline(clean, 11)
-    create_excel("results_new/spectral_11", data, labels)
+    labels = transformer_spectral_pipeline(clean, 7)
+    create_excel("results_new/spectral_7", data, labels)
 
 
     # true = pd.read_excel("data/Recommendations_label.xlsx")["Label"]
