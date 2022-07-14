@@ -1,7 +1,7 @@
 # NLP-clustering for Recommendation
 
 ## Introduction
-This library focuses on sentence clustering, specifically recommendation clustering for telecommunication networks, but can be applied to any sort of sentences. It is based on the bachelor research "Textual Clusterinf for Telecommunication Accident Recommendations". The recommendations used in this specific case were extracted during workshops for accident analysis in the research of [Wienen et al.]() This library focuses on finding the most optimal unsupervised text clustering method with the best number of clusters. This consists firstly on internal validation scores to find the most optimal number of cluster and secondly on external validation indices to find the most optimal out of all trained models. It also allows the visual comparison of different algortihms based on dimensionality reduction.
+This library focuses on sentence clustering, specifically recommendation clustering for telecommunication networks, but can be applied to any sort of sentences. It is based on the bachelor research "Textual Clustering for Telecommunication Accident Recommendations". The recommendations used in this specific case were extracted during workshops for accident analysis in the research of [Wienen et al.]() This library focuses on finding the most optimal unsupervised text clustering method with the best number of clusters. This consists firstly on internal validation scores to find the most optimal number of cluster and secondly on external validation indices to find the most optimal out of all trained models. It also allows the visual comparison of different algortihms based on dimensionality reduction.
 
 ## How it works
 The following methodology is applied:
